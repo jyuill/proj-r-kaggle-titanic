@@ -1,3 +1,7 @@
+### Intro to Kaggle via Titanic dataset, pt 1
+## based on Data Science Dojo tutorial
+## https://www.youtube.com/watch?v=Zx2TguRHrJE
+
 
 ## Get training data
 titanic.train <- read.csv("input/train.csv", stringsAsFactors = FALSE)

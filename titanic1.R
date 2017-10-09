@@ -75,6 +75,14 @@ table(is.na(titanic.full$Fare)) ## lots missing
 fare.replace <- median(titanic.full$Fare, na.rm=TRUE)
 titanic.full[is.na(titanic.full$Fare), "Fare"] <- fare.replace
 
+## categorical casting
+str(titanic.full)
+titanic.full$Pclass <- as.factor(titanic.full$Pclass)
+titanic.full$Sex <- as.factor(titanic.full$Sex)
+titanic.full$Embarked <- as.factor(titanic.full$Embarked)
+str(titanic.full)
+## may also want to cast Sibsp and Parch as.ordinal
+
 ### Split data back out to train and test sets
 ## clean training set
 titanic.train2 <- titanic.full[titanic.full$IsTrainSet==TRUE,]
@@ -82,5 +90,33 @@ titanic.train2 <- titanic.full[titanic.full$IsTrainSet==TRUE,]
 library(dplyr)
 titanic.test2 <- titanic.full %>% filter(IsTrainSet==FALSE)
 
+## Survived as factor
+## convert Survived on training data only - no NAs
+## makes it clear that this is classification problem, not regression, etc
+titanic.train2$Survived <- as.factor(titanic.train2$Survived)
 
+### BUILD PREDICTIVE MODEL
+## select predictors
+survived.equation <- "Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked"
+survived.formula <- as.formula(survived.equation)
 
+library(randomForest)
+titanic.model <- randomForest(formula(survived.formula), data=titanic.train2, ntree=500, mtry=3, nodesize=0.01*nrow(titanic.test2))
+
+## list of features used in model -> not sure how this is used
+features.equation <- "Pclass + Sex + Age + SibSp + Parch + Fare + Embarked"
+
+## make prediction based on the model applied to test data
+Survived <- predict(titanic.model, newdata=titanic.test2)
+## see results of the model
+Survived
+
+## get passenger ids from test set
+PassengerId <- titanic.test2$PassengerId
+## create data frame with passenger ids
+output.df <- as.data.frame(PassengerId)
+## add survived column from prediction above - assumes same order as passenger ids in test2
+output.df$Survived <- Survived 
+
+## save file
+write.csv(output.df, "output/prediction1.csv", row.names = FALSE)
